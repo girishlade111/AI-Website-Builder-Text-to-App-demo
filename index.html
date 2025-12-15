@@ -7,20 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Custom Scrollbar */
+        /* Custom Scrollbar - Monochrome */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #111827; 
+            background: #000000; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #374151; 
-            border-radius: 4px;
+            background: #333333; 
+            border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #4b5563; 
+            background: #555555; 
         }
 
         /* Editor textarea styling */
@@ -30,14 +30,14 @@
             tab-size: 2;
         }
 
-        /* Loading Spinner */
+        /* Loading Spinner - White */
         .loader {
-            border: 3px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 50%;
-            border-top: 3px solid #3b82f6;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+            border-top: 2px solid #ffffff;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -50,77 +50,115 @@
             to { transform: translateX(0); opacity: 1; }
         }
         .toast-enter {
-            animation: slideIn 0.3s ease-out forwards;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        /* Matte Finish Utilities */
+        .bg-matte {
+            background-color: #09090b; /* Zinc 950 */
+        }
+        .bg-matte-lighter {
+            background-color: #18181b; /* Zinc 900 */
         }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
+<body class="bg-black text-white font-sans h-screen flex overflow-hidden selection:bg-white selection:text-black">
 
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- Sidebar -->
-    <aside class="w-80 flex flex-col border-r border-gray-800 bg-gray-900/50 backdrop-blur-sm z-10 flex-shrink-0">
+    <aside class="w-80 flex flex-col border-r border-zinc-800 bg-black z-10 flex-shrink-0">
         <!-- Header -->
-        <div class="p-5 border-b border-gray-800 flex items-center gap-3">
-            <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <i class="fa-solid fa-wand-magic-sparkles text-white text-sm"></i>
+        <div class="p-5 border-b border-zinc-800 flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.15)]">
+                <i class="fa-solid fa-code text-black text-sm"></i>
             </div>
-            <h1 class="font-bold text-lg tracking-tight">AI Builder</h1>
+            <h1 class="font-bold text-lg tracking-tight text-white">AI Builder</h1>
         </div>
 
         <!-- Settings Section -->
-        <div class="p-5 border-b border-gray-800 space-y-4">
+        <div class="p-5 border-b border-zinc-800 space-y-5">
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">AI Provider</label>
-                <div class="grid grid-cols-2 bg-gray-950 p-1 rounded-lg border border-gray-800">
-                    <button onclick="setProvider('gemini')" id="btn-gemini" class="provider-btn active text-xs py-2 rounded-md font-medium transition-all bg-gray-800 text-white shadow-sm">Gemini</button>
-                    <button onclick="setProvider('openai')" id="btn-openai" class="provider-btn text-xs py-2 rounded-md font-medium text-gray-500 hover:text-gray-300 transition-all">OpenAI</button>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Select Model</label>
+                <div class="relative group">
+                    <select id="model-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-xs focus:outline-none focus:border-white focus:ring-0 transition-all appearance-none cursor-pointer text-zinc-300 group-hover:border-zinc-700">
+                        <!-- Reliable free model IDs -->
+                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash Exp (Free)</option>
+                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
+                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct (Free)</option>
+                        <option value="microsoft/phi-3-medium-128k-instruct:free">Phi-3 Medium (Free)</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-zinc-600 text-xs pointer-events-none"></i>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">API Key</label>
-                <div class="relative">
-                    <input type="password" id="api-key" placeholder="Paste your API key here" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-600">
-                    <i class="fa-solid fa-key absolute right-3 top-2.5 text-gray-600 text-xs"></i>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">API Key</label>
+                <div class="relative group">
+                    <input type="password" id="api-key" value="" placeholder="Paste your API key here" class="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-white focus:ring-0 transition-all placeholder-zinc-600 text-white group-hover:border-zinc-700">
+                    <i class="fa-solid fa-key absolute right-3 top-3 text-zinc-600 text-xs"></i>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-1">Key is stored locally in browser memory only.</p>
+                <p class="text-[10px] text-zinc-600 mt-1.5">Key stored locally.</p>
             </div>
         </div>
 
         <!-- Prompt Section -->
         <div class="p-5 flex-1 flex flex-col min-h-0">
-            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your Vision</label>
-            <textarea id="user-prompt" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder-gray-600 leading-relaxed" placeholder="Describe the website you want to build...&#10;&#10;Example:&#10;Create a modern landing page for a coffee shop called 'Brew & Bean' with a hero section, menu grid, and a dark aesthetic."></textarea>
+            <div class="flex items-center justify-between mb-3">
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Your Vision</label>
+                <button onclick="enhancePrompt()" id="enhance-btn" class="text-[10px] font-medium flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 px-2.5 py-1 rounded border border-zinc-800 hover:border-zinc-600">
+                    <i id="enhance-icon" class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                    <span>Enhance</span>
+                </button>
+            </div>
+            <textarea id="user-prompt" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-md p-4 text-sm focus:outline-none focus:border-white focus:ring-0 transition-all resize-none placeholder-zinc-600 leading-relaxed text-zinc-200" placeholder="Describe the website you want to build...&#10;&#10;Example:&#10;Create a modern landing page for a coffee shop called 'Brew & Bean' with a hero section, menu grid, and a dark aesthetic."></textarea>
             
-            <button id="generate-btn" onclick="generateSite()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 group">
+            <button id="generate-btn" onclick="generateSite()" class="mt-5 w-full bg-white hover:bg-zinc-200 text-black font-bold py-3.5 rounded-md shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all flex items-center justify-center gap-2 group active:scale-[0.98]">
                 <span id="btn-text">Generate Website</span>
                 <i id="btn-icon" class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 <div id="btn-loader" class="loader hidden"></div>
             </button>
         </div>
 
-        <div class="p-4 border-t border-gray-800 text-center">
-            <p class="text-[10px] text-gray-600">Built with vanilla JS & Tailwind</p>
+        <div class="p-4 border-t border-zinc-800 flex flex-col items-center gap-4 bg-black">
+            <div class="flex gap-4">
+                <a href="https://github.com/girishlade111" target="_blank" title="GitHub" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-brands fa-github"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" title="LinkedIn" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-brands fa-linkedin"></i>
+                </a>
+                <a href="https://www.instagram.com/girish_lade_/" target="_blank" title="Instagram" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" title="CodePen" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-brands fa-codepen"></i>
+                </a>
+                <a href="mailto:girishlade111@gmail.com" title="Email" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-envelope"></i>
+                </a>
+            </div>
+            <p class="text-[10px] text-zinc-700 font-medium">Designed by Girish Lade</p>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col relative bg-gray-950">
+    <main class="flex-1 flex flex-col relative bg-black">
         <!-- Toolbar -->
-        <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-gray-900/30">
-            <div class="flex items-center gap-1 bg-gray-900 p-1 rounded-lg border border-gray-800">
-                <button onclick="setView('preview')" id="tab-preview" class="view-tab active px-4 py-1.5 rounded-md text-xs font-medium text-white bg-gray-800 shadow-sm transition-all flex items-center gap-2">
+        <header class="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-black">
+            <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-md border border-zinc-800">
+                <button onclick="setView('preview')" id="tab-preview" class="view-tab active px-4 py-1.5 rounded-[4px] text-xs font-semibold text-black bg-white shadow-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-desktop"></i> Preview
                 </button>
-                <button onclick="setView('code')" id="tab-code" class="view-tab px-4 py-1.5 rounded-md text-xs font-medium text-gray-500 hover:text-gray-300 transition-all flex items-center gap-2">
+                <button onclick="setView('code')" id="tab-code" class="view-tab px-4 py-1.5 rounded-[4px] text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-code"></i> Code
                 </button>
             </div>
 
             <div class="flex items-center gap-3">
-                <button onclick="copyCode()" class="text-xs font-medium text-gray-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-800 border border-transparent hover:border-gray-700">
+                <button onclick="copyCode()" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
                     <i class="fa-regular fa-copy"></i> Copy HTML
                 </button>
             </div>
@@ -134,24 +172,23 @@
                 <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
                 
                 <!-- Empty State -->
-                <div id="empty-state" class="absolute inset-0 bg-gray-950 flex flex-col items-center justify-center text-gray-600">
-                    <div class="w-16 h-16 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-layer-group text-2xl text-gray-700"></i>
+                <div id="empty-state" class="absolute inset-0 bg-black flex flex-col items-center justify-center text-zinc-500">
+                    <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 shadow-2xl">
+                        <i class="fa-solid fa-layer-group text-2xl text-zinc-600"></i>
                     </div>
-                    <p class="text-sm font-medium">Ready to build something amazing.</p>
+                    <p class="text-sm font-medium tracking-wide">READY TO BUILD</p>
                 </div>
             </div>
 
             <!-- Code View -->
-            <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-gray-950 hidden">
-                <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#0d1117] text-gray-300 p-6 border-none outline-none resize-none text-sm font-mono"></textarea>
+            <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-black hidden">
+                <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#050505] text-zinc-300 p-6 border-none outline-none resize-none text-sm font-mono"></textarea>
             </div>
         </div>
     </main>
 
     <script>
         // --- Configuration & State ---
-        let currentProvider = 'gemini';
         let generatedCode = '';
         
         // System Prompt: The core instruction set for the AI
@@ -179,20 +216,6 @@
 
         // --- UI Interactions ---
 
-        function setProvider(provider) {
-            currentProvider = provider;
-            
-            // UI Toggle Logic
-            document.querySelectorAll('.provider-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-gray-800', 'text-white', 'shadow-sm');
-                btn.classList.add('text-gray-500');
-            });
-
-            const activeBtn = document.getElementById(`btn-${provider}`);
-            activeBtn.classList.add('active', 'bg-gray-800', 'text-white', 'shadow-sm');
-            activeBtn.classList.remove('text-gray-500');
-        }
-
         function setView(view) {
             const previewEl = document.getElementById('view-preview');
             const codeEl = document.getElementById('view-code');
@@ -203,20 +226,24 @@
                 previewEl.classList.remove('hidden');
                 codeEl.classList.add('hidden');
                 
-                tabPreview.classList.add('bg-gray-800', 'text-white');
-                tabPreview.classList.remove('text-gray-500');
+                // Active State (Preview)
+                tabPreview.classList.add('bg-white', 'text-black', 'shadow-sm');
+                tabPreview.classList.remove('text-zinc-500');
                 
-                tabCode.classList.remove('bg-gray-800', 'text-white');
-                tabCode.classList.add('text-gray-500');
+                // Inactive State (Code)
+                tabCode.classList.remove('bg-white', 'text-black', 'shadow-sm');
+                tabCode.classList.add('text-zinc-500');
             } else {
                 previewEl.classList.add('hidden');
                 codeEl.classList.remove('hidden');
 
-                tabCode.classList.add('bg-gray-800', 'text-white');
-                tabCode.classList.remove('text-gray-500');
+                // Active State (Code)
+                tabCode.classList.add('bg-white', 'text-black', 'shadow-sm');
+                tabCode.classList.remove('text-zinc-500');
 
-                tabPreview.classList.remove('bg-gray-800', 'text-white');
-                tabPreview.classList.add('text-gray-500');
+                // Inactive State (Preview)
+                tabPreview.classList.remove('bg-white', 'text-black', 'shadow-sm');
+                tabPreview.classList.add('text-zinc-500');
             }
         }
 
@@ -224,11 +251,18 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
-            const colors = type === 'error' ? 'bg-red-500/10 border-red-500/50 text-red-200' : 'bg-green-500/10 border-green-500/50 text-green-200';
-            const icon = type === 'error' ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-check-circle"></i>';
+            // Monochrome toast styles with slight color hint for status
+            const styleClass = type === 'error' 
+                ? 'bg-zinc-900 border-red-900/50 text-red-200' 
+                : 'bg-zinc-900 border-zinc-800 text-white';
+            
+            const iconColor = type === 'error' ? 'text-red-500' : 'text-white';
+            const icon = type === 'error' 
+                ? '<i class="fa-solid fa-circle-exclamation"></i>' 
+                : '<i class="fa-solid fa-check-circle"></i>';
 
-            toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-md shadow-lg text-sm font-medium ${colors}`;
-            toast.innerHTML = `${icon} <span>${message}</span>`;
+            toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-md border backdrop-blur-md shadow-2xl text-sm font-medium ${styleClass}`;
+            toast.innerHTML = `<span class="${iconColor}">${icon}</span> <span>${message}</span>`;
 
             container.appendChild(toast);
 
@@ -246,23 +280,31 @@
             const btnLoader = document.getElementById('btn-loader');
             const apiKeyInput = document.getElementById('api-key');
             const promptInput = document.getElementById('user-prompt');
+            const modelSelect = document.getElementById('model-select');
+            const enhanceBtn = document.getElementById('enhance-btn');
 
             if (isLoading) {
                 btn.disabled = true;
-                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                btn.classList.add('opacity-80', 'cursor-not-allowed');
                 btnText.innerText = 'Building...';
                 btnIcon.classList.add('hidden');
                 btnLoader.classList.remove('hidden');
                 apiKeyInput.disabled = true;
                 promptInput.disabled = true;
+                modelSelect.disabled = true;
+                enhanceBtn.disabled = true;
+                enhanceBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 btn.disabled = false;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
                 btnText.innerText = 'Generate Website';
                 btnIcon.classList.remove('hidden');
                 btnLoader.classList.add('hidden');
                 apiKeyInput.disabled = false;
                 promptInput.disabled = false;
+                modelSelect.disabled = false;
+                enhanceBtn.disabled = false;
+                enhanceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -291,10 +333,56 @@
         }
 
         // --- Core Logic: API Communication ---
+        
+        async function enhancePrompt() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const promptInput = document.getElementById('user-prompt');
+            const prompt = promptInput.value.trim();
+            const model = document.getElementById('model-select').value;
+            const btnIcon = document.getElementById('enhance-icon');
+            const btn = document.getElementById('enhance-btn');
+
+            if (!apiKey) {
+                showToast("Please enter your API Key", "error");
+                return;
+            }
+            if (!prompt) {
+                showToast("Enter a basic prompt to enhance", "error");
+                return;
+            }
+
+            // Loading state for enhance button
+            const originalIconClass = btnIcon.className;
+            btnIcon.className = "fa-solid fa-circle-notch fa-spin";
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const systemPrompt = "You are an expert prompt engineer for web development. Rewrite the following user prompt to be comprehensive, detailed, and structured specifically for an AI that generates HTML/Tailwind code. Focus on layout, visual style, color schemes (suggest modern palettes), and specific features. Keep the tone technical but clear. Output ONLY the enhanced prompt, no conversational text.";
+                
+                // Use the generic call function with a custom system prompt
+                const enhanced = await callOpenRouter(apiKey, prompt, model, systemPrompt);
+                
+                // Remove quotes if the AI wraps the output
+                const cleanEnhanced = enhanced.replace(/^["']|["']$/g, '').trim();
+                
+                promptInput.value = cleanEnhanced;
+                showToast("Prompt enhanced successfully!");
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || "Failed to enhance prompt", "error");
+            } finally {
+                // Reset state
+                btnIcon.className = originalIconClass;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
 
         async function generateSite() {
             const apiKey = document.getElementById('api-key').value.trim();
             const prompt = document.getElementById('user-prompt').value.trim();
+            const model = document.getElementById('model-select').value;
 
             if (!apiKey) {
                 showToast("Please enter your API Key", "error");
@@ -308,13 +396,8 @@
             toggleLoading(true);
 
             try {
-                let htmlContent = "";
-
-                if (currentProvider === 'gemini') {
-                    htmlContent = await callGemini(apiKey, prompt);
-                } else {
-                    htmlContent = await callOpenAI(apiKey, prompt);
-                }
+                // Direct call to OpenRouter with selected model, using default system prompt
+                let htmlContent = await callOpenRouter(apiKey, prompt, model);
 
                 // Clean the output (remove markdown fences if AI ignores prompt)
                 const cleanHtml = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
@@ -331,61 +414,58 @@
             }
         }
 
-        async function callGemini(apiKey, prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // Generic function for calling OpenRouter
+        async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
+            // Fix: Use plain strings for URL and Referer to avoid parsing errors
+            const url = "https://openrouter.ai/api/v1/chat/completions";
+            const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
-            const payload = {
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                systemInstruction: {
-                    parts: [{ text: SYSTEM_PROMPT }]
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
+                        "X-Title": "AI Website Builder",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "model": model,
+                        "messages": [
+                            { "role": "system", "content": effectiveSystemPrompt },
+                            { "role": "user", "content": prompt }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorObj;
+                    try {
+                        errorObj = JSON.parse(errorText);
+                    } catch (e) {
+                        throw new Error(`API Error ${response.status}: ${errorText}`);
+                    }
+                    
+                    const apiMessage = errorObj.error?.message;
+                    if (apiMessage && apiMessage.includes("Provider returned error")) {
+                        throw new Error("The selected model is currently busy. Please try a different model.");
+                    }
+                    
+                    throw new Error(apiMessage || `API Error: ${response.statusText}`);
                 }
-            };
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+                const data = await response.json();
+                
+                if (!data.choices || data.choices.length === 0) {
+                     throw new Error("No completion found in response.");
+                }
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || 'Gemini API Error');
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error("OpenRouter Call Failed:", error);
+                throw error;
             }
-
-            const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
-        }
-
-        async function callOpenAI(apiKey, prompt) {
-            const url = '[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)';
-            
-            const payload = {
-                model: "gpt-4o-mini", // Cost-effective and fast
-                messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: prompt }
-                ],
-                temperature: 0.7
-            };
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || 'OpenAI API Error');
-            }
-
-            const data = await response.json();
-            return data.choices[0].message.content;
         }
 
         // --- Initialization ---
