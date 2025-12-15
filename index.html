@@ -322,7 +322,7 @@
         }
 
         async function callOpenRouter(apiKey, prompt, model) {
-            const url = "https://openrouter.ai/api/v1/chat/completions";
+            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             
             try {
                 const response = await fetch(url, {
@@ -330,7 +330,7 @@
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
                         // Changed to a static URL because blob: URLs (from local execution) can be rejected by some providers
-                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
+                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
                     },
