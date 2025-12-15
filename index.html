@@ -19,11 +19,11 @@
 
         /* Custom Scrollbar - Monochrome */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
-            background: #09090b; 
+            background: transparent; 
         }
         ::-webkit-scrollbar-thumb {
             background: #27272a; 
@@ -42,9 +42,9 @@
 
         /* Loading Spinner */
         .loader {
-            border: 2px solid rgba(0,0,0,0.1);
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 50%;
-            border-top: 2px solid #000000;
+            border-top: 2px solid #ffffff;
             width: 14px;
             height: 14px;
             animation: spin 0.8s linear infinite;
@@ -54,13 +54,13 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Toast Notification Animation */
-        @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .toast-enter {
-            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .msg-enter {
+            animation: fadeIn 0.3s ease-out forwards;
         }
         
         /* Terminal Styling */
@@ -78,72 +78,99 @@
         .log-timestamp { color: #52525b; margin-right: 8px; font-size: 0.7rem; }
     </style>
 </head>
-<body class="bg-black text-white h-screen flex overflow-hidden selection:bg-white selection:text-black">
+<body class="bg-black text-white h-screen flex overflow-hidden selection:bg-zinc-800 selection:text-white">
 
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Sidebar -->
-    <aside class="w-[340px] flex flex-col border-r border-zinc-900 bg-[#050505] z-10 flex-shrink-0 relative">
+    <!-- Sidebar (Chat Interface) -->
+    <aside class="w-[360px] flex flex-col border-r border-zinc-900 bg-[#050505] z-10 flex-shrink-0 relative">
         <!-- Header -->
-        <div class="h-14 border-b border-zinc-900 flex items-center px-5 gap-3 shrink-0">
-            <div class="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.05)]">
-                <i class="fa-solid fa-code text-white text-[10px]"></i>
+        <div class="h-14 border-b border-zinc-900 flex items-center justify-between px-5 shrink-0 bg-[#050505]/95 backdrop-blur z-20">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                    <i class="fa-solid fa-layer-group text-white text-[10px]"></i>
+                </div>
+                <h1 class="font-medium text-sm tracking-tight text-zinc-200">AI Builder</h1>
             </div>
-            <h1 class="font-semibold text-sm tracking-wide text-white">AI Builder</h1>
+            <div class="flex items-center gap-2">
+                 <!-- Tiny status dot -->
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]"></div>
+            </div>
         </div>
 
-        <!-- Main Input Area (Flexible Height) -->
-        <div class="flex-1 flex flex-col p-5 min-h-0 overflow-y-auto">
-            <div class="flex items-center justify-between mb-3">
-                <label class="text-[11px] font-medium text-zinc-500 uppercase tracking-widest">Vision</label>
-                <button onclick="enhancePrompt()" id="enhance-btn" class="text-[10px] font-medium flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800">
-                    <i id="enhance-icon" class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                    <span>Enhance</span>
-                </button>
-            </div>
-            
-            <textarea id="user-prompt" class="flex-1 w-full bg-zinc-900/30 border border-zinc-800 rounded-lg p-4 text-sm focus:outline-none focus:border-zinc-600 focus:bg-zinc-900/50 transition-all resize-none placeholder-zinc-700 leading-relaxed text-zinc-200" placeholder="Describe your web app idea...&#10;&#10;E.g., A minimalist portfolio for a photographer with a masonry grid gallery and a contact form using a dark theme."></textarea>
-        </div>
-
-        <!-- Configuration & Controls (Fixed Bottom) -->
-        <div class="p-5 border-t border-zinc-900 bg-[#050505] shrink-0">
-            
-            <!-- Unified Action Card (Now Dark) -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-1.5 shadow-lg transition-all">
-                
-                <!-- Compact Settings Row -->
-                <div class="flex gap-1.5 mb-1.5">
-                    <!-- Key Input -->
-                    <div class="relative flex-1 group">
-                        <input type="password" id="api-key" value="" placeholder="API Key" class="w-full h-8 bg-black border border-zinc-800 text-zinc-300 text-[10px] font-medium rounded px-2 focus:border-zinc-600 focus:ring-0 outline-none placeholder-zinc-600 transition-all">
+        <!-- Chat History -->
+        <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth pb-4">
+            <!-- Welcome Message -->
+            <div class="msg-enter">
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded bg-zinc-800 flex-shrink-0 flex items-center justify-center mt-0.5">
+                        <i class="fa-solid fa-robot text-zinc-400 text-[10px]"></i>
                     </div>
-                    <!-- Model Select -->
-                    <div class="relative flex-1">
-                        <select id="model-select" class="w-full h-8 bg-black border border-zinc-800 text-zinc-300 text-[10px] font-medium rounded px-2 focus:border-zinc-600 outline-none appearance-none cursor-pointer truncate">
-                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 (Free)</option>
-                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 (Free)</option>
-                            <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 (Free)</option>
-                            <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-2 top-2.5 text-zinc-500 text-[8px] pointer-events-none"></i>
+                    <div class="flex-1 space-y-2">
+                        <div class="text-[13px] text-zinc-300 leading-relaxed">
+                            Hello! I'm your AI developer. Describe the website you want to build, and I'll write the code for you.
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <button onclick="setPrompt('Portfolio with dark mode')" class="text-[11px] px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-zinc-200 transition-all text-left">
+                                Portfolio with dark mode
+                            </button>
+                            <button onclick="setPrompt('Landing page for SaaS')" class="text-[11px] px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-zinc-200 transition-all text-left">
+                                Landing page for SaaS
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <!-- Dynamic Messages will be appended here -->
+        </div>
 
-                <!-- Main Action Button (Inverted to White for Contrast) -->
-                <button id="generate-btn" onclick="generateSite()" class="w-full bg-white hover:bg-zinc-200 text-black text-[11px] font-bold uppercase tracking-wide py-2.5 rounded flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-sm">
-                    <span id="btn-text">Generate</span>
-                    <i id="btn-icon" class="fa-solid fa-arrow-right text-[10px]"></i>
-                    <div id="btn-loader" class="loader hidden"></div>
-                </button>
+        <!-- Chat Composer Area -->
+        <div class="p-4 bg-[#050505] border-t border-zinc-900 shrink-0">
+            
+            <!-- Settings Bar (Minimal) -->
+            <div class="flex items-center justify-between mb-2 px-1">
+                <div class="flex items-center gap-2">
+                    <div class="relative group">
+                        <select id="model-select" class="appearance-none bg-transparent text-[10px] font-medium text-zinc-500 hover:text-zinc-300 uppercase tracking-wide cursor-pointer pr-4 focus:outline-none">
+                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0</option>
+                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3</option>
+                            <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5</option>
+                            <option value="mistralai/mistral-7b-instruct:free">Mistral 7B</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-0 top-1/2 -translate-y-1/2 text-[8px] text-zinc-600 pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <!-- API Key Toggle -->
+                <div class="relative group">
+                    <input type="password" id="api-key" value="" placeholder="API KEY" class="w-24 bg-transparent text-[10px] text-zinc-500 focus:text-zinc-300 text-right focus:w-48 transition-all outline-none placeholder-zinc-700">
+                    <i class="fa-solid fa-key text-[8px] text-zinc-700 ml-1"></i>
+                </div>
             </div>
 
-            <!-- Minimal Footer -->
-            <div class="pt-4 flex justify-center gap-5 border-t border-zinc-900/0 mt-2">
-                <a href="https://github.com/girishlade111" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-github text-xs"></i></a>
-                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-linkedin text-xs"></i></a>
-                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-codepen text-xs"></i></a>
-                <a href="mailto:girishlade111@gmail.com" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-solid fa-envelope text-xs"></i></a>
+            <!-- Main Composer Box -->
+            <div class="relative group bg-zinc-900 border border-zinc-800 focus-within:border-zinc-600 rounded-xl transition-all shadow-lg">
+                <textarea id="user-prompt" class="w-full bg-transparent text-sm text-white p-3 min-h-[50px] max-h-[200px] resize-none focus:outline-none placeholder-zinc-600 leading-relaxed scrollbar-hide" placeholder="Ask AI Builder..." rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                
+                <!-- Composer Toolbar -->
+                <div class="flex items-center justify-between px-2 pb-2 mt-1">
+                    <div class="flex items-center gap-1">
+                        <button onclick="enhancePrompt()" id="enhance-btn" class="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 transition-colors group/btn relative" title="Enhance Prompt">
+                            <i id="enhance-icon" class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-800 text-[10px] text-white rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Enhance</span>
+                        </button>
+                    </div>
+                    
+                    <button id="generate-btn" onclick="generateSite()" class="p-2 rounded-lg bg-white hover:bg-zinc-200 text-black shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all flex items-center justify-center w-8 h-8 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i id="btn-icon" class="fa-solid fa-arrow-up text-sm"></i>
+                        <div id="btn-loader" class="loader hidden w-3 h-3 border-zinc-900 border-t-transparent"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <p class="text-[10px] text-zinc-700">AI can make mistakes. Check generated code.</p>
             </div>
         </div>
     </aside>
@@ -321,6 +348,50 @@
             }
         }
 
+        // --- Chat UI Logic ---
+        function setPrompt(text) {
+            const textarea = document.getElementById('user-prompt');
+            textarea.value = text;
+            textarea.style.height = ''; 
+            textarea.style.height = textarea.scrollHeight + 'px';
+            textarea.focus();
+        }
+
+        function addToChatHistory(text, type = 'user') {
+            const container = document.getElementById('chat-history');
+            const entry = document.createElement('div');
+            entry.className = 'msg-enter mb-4';
+
+            if (type === 'user') {
+                entry.innerHTML = `
+                    <div class="flex justify-end gap-3">
+                        <div class="max-w-[85%] bg-zinc-800 text-zinc-200 text-[13px] px-3 py-2 rounded-2xl rounded-tr-sm leading-relaxed">
+                            ${text.replace(/\n/g, '<br>')}
+                        </div>
+                         <div class="w-6 h-6 rounded-full bg-zinc-700 flex-shrink-0 flex items-center justify-center mt-0.5">
+                            <i class="fa-solid fa-user text-zinc-400 text-[10px]"></i>
+                        </div>
+                    </div>
+                `;
+            } else {
+                 entry.innerHTML = `
+                    <div class="flex gap-3">
+                        <div class="w-6 h-6 rounded bg-zinc-800 flex-shrink-0 flex items-center justify-center mt-0.5">
+                            <i class="fa-solid fa-robot text-zinc-400 text-[10px]"></i>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                             <div class="text-[13px] text-zinc-300 leading-relaxed">
+                                ${text}
+                             </div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+
         // --- UI Interactions ---
 
         function setView(view) {
@@ -333,22 +404,18 @@
                 previewEl.classList.remove('hidden');
                 codeEl.classList.add('hidden');
                 
-                // Active: Dark Grey
                 tabPreview.classList.add('bg-zinc-800', 'text-white', 'border-zinc-700');
                 tabPreview.classList.remove('text-zinc-500', 'hover:text-zinc-300', 'border-transparent');
                 
-                // Inactive: Transparent
                 tabCode.classList.remove('bg-zinc-800', 'text-white', 'border-zinc-700');
                 tabCode.classList.add('text-zinc-500', 'hover:text-zinc-300', 'border-transparent');
             } else {
                 previewEl.classList.add('hidden');
                 codeEl.classList.remove('hidden');
 
-                // Active: Dark Grey
                 tabCode.classList.add('bg-zinc-800', 'text-white', 'border-zinc-700');
                 tabCode.classList.remove('text-zinc-500', 'hover:text-zinc-300', 'border-transparent');
 
-                // Inactive: Transparent
                 tabPreview.classList.remove('bg-zinc-800', 'text-white', 'border-zinc-700');
                 tabPreview.classList.add('text-zinc-500', 'hover:text-zinc-300', 'border-transparent');
             }
@@ -381,41 +448,36 @@
 
         function toggleLoading(isLoading) {
             const btn = document.getElementById('generate-btn');
-            const btnText = document.getElementById('btn-text');
             const btnIcon = document.getElementById('btn-icon');
             const btnLoader = document.getElementById('btn-loader');
             const apiKeyInput = document.getElementById('api-key');
             const promptInput = document.getElementById('user-prompt');
-            const modelSelect = document.getElementById('model-select');
             const enhanceBtn = document.getElementById('enhance-btn');
             const statusInd = document.getElementById('status-indicator');
 
             if (isLoading) {
                 btn.disabled = true;
                 btn.classList.add('opacity-80', 'cursor-not-allowed');
-                btnText.innerText = 'Building...';
                 btnIcon.classList.add('hidden');
                 btnLoader.classList.remove('hidden');
                 apiKeyInput.disabled = true;
                 promptInput.disabled = true;
-                modelSelect.disabled = true;
                 enhanceBtn.disabled = true;
-                enhanceBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 statusInd.innerText = "Generating...";
                 statusInd.classList.add('text-blue-400');
             } else {
                 btn.disabled = false;
                 btn.classList.remove('opacity-80', 'cursor-not-allowed');
-                btnText.innerText = 'Generate';
                 btnIcon.classList.remove('hidden');
                 btnLoader.classList.add('hidden');
                 apiKeyInput.disabled = false;
                 promptInput.disabled = false;
-                modelSelect.disabled = false;
                 enhanceBtn.disabled = false;
-                enhanceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 statusInd.innerText = "Ready";
                 statusInd.classList.remove('text-blue-400');
+                
+                // Refocus input
+                setTimeout(() => promptInput.focus(), 100);
             }
         }
 
@@ -517,6 +579,10 @@
                 const enhanced = await callOpenRouter(apiKey, prompt, model, systemPrompt);
                 const cleanEnhanced = enhanced.replace(/^["']|["']$/g, '').trim();
                 promptInput.value = cleanEnhanced;
+                // Auto-expand textarea
+                promptInput.style.height = ''; 
+                promptInput.style.height = promptInput.scrollHeight + 'px';
+                
                 showToast("Prompt enhanced!");
                 appendLog('log-terminal', 'Prompt enhanced.', 'success');
             } catch (e) {
@@ -531,7 +597,8 @@
 
         async function generateSite() {
             const apiKey = document.getElementById('api-key').value.trim();
-            const prompt = document.getElementById('user-prompt').value.trim();
+            const promptInput = document.getElementById('user-prompt');
+            const prompt = promptInput.value.trim();
             const model = document.getElementById('model-select').value;
 
             if (!apiKey) {
@@ -543,6 +610,12 @@
                 return;
             }
 
+            // Add to history
+            addToChatHistory(prompt, 'user');
+            // Clear input
+            promptInput.value = '';
+            promptInput.style.height = 'auto';
+
             toggleLoading(true);
             toggleTerminal(true);
             setPanelTab('terminal');
@@ -550,9 +623,34 @@
             document.getElementById('log-console').innerHTML = '';
             
             appendLog('log-terminal', `Initializing build: ${model}`);
+            
+            // Add "Thinking" bubble
+            const historyContainer = document.getElementById('chat-history');
+            const thinkingId = 'thinking-' + Date.now();
+            const thinkingEntry = document.createElement('div');
+            thinkingEntry.id = thinkingId;
+            thinkingEntry.className = 'msg-enter mb-4';
+            thinkingEntry.innerHTML = `
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded bg-zinc-800 flex-shrink-0 flex items-center justify-center mt-0.5 animate-pulse">
+                        <i class="fa-solid fa-robot text-zinc-400 text-[10px]"></i>
+                    </div>
+                    <div class="text-[13px] text-zinc-500 italic mt-1">Generating code...</div>
+                </div>
+            `;
+            historyContainer.appendChild(thinkingEntry);
+            historyContainer.scrollTop = historyContainer.scrollHeight;
+
 
             try {
                 let htmlContent = await callOpenRouter(apiKey, prompt, model);
+                
+                // Remove thinking bubble
+                document.getElementById(thinkingId).remove();
+                
+                // Add success message
+                addToChatHistory('Code generated successfully! Check the preview on the right.', 'system');
+
                 appendLog('log-terminal', 'Data received. Rendering...');
                 const cleanHtml = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
                 updatePreview(cleanHtml);
@@ -560,6 +658,8 @@
                 showToast("Website generated!");
                 appendLog('log-terminal', 'Build complete.', 'success');
             } catch (error) {
+                document.getElementById(thinkingId).remove();
+                addToChatHistory(`Error: ${error.message}`, 'system');
                 console.error(error);
                 showToast("Generation failed", "error");
                 appendLog('log-terminal', `Error: ${error.message}`, 'error');
@@ -569,7 +669,6 @@
         }
 
         async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
-            // FIXED: Removed markdown formatting from URLs
             const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
@@ -578,7 +677,6 @@
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        // FIXED: Removed markdown formatting from URL
                         "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
@@ -614,6 +712,7 @@
         // --- Init ---
         document.getElementById('user-prompt').addEventListener('keydown', function(e) {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
                 generateSite();
             }
         });
@@ -621,7 +720,6 @@
         document.getElementById('code-output').addEventListener('input', function(e) {
             const newCode = e.target.value;
             generatedCode = newCode;
-            // Debounce handled by user typing speed naturally, strict update on paste/stop
             clearTimeout(window.updateTimer);
             window.updateTimer = setTimeout(() => updatePreview(newCode), 800);
         });
