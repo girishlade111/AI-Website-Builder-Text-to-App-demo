@@ -75,12 +75,11 @@
                 <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Model</label>
                 <div class="relative">
                     <select id="model-select" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer text-gray-300">
-                        <!-- Updated with more reliable free model IDs -->
                         <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash Exp (Free)</option>
-                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
-                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
-                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct (Free)</option>
-                        <option value="microsoft/phi-3-medium-128k-instruct:free">Phi-3 Medium (Free)</option>
+                        <option value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</option>
+                        <option value="openai/gpt-oss-120b:free">GPT OSS 120B (Free)</option>
+                        <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air (Free)</option>
+                        <option value="moonshotai/kimi-k2:free">Moonshot Kimi K2 (Free)</option>
                     </select>
                     <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-gray-600 text-xs pointer-events-none"></i>
                 </div>
@@ -323,14 +322,15 @@
         }
 
         async function callOpenRouter(apiKey, prompt, model) {
-            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+            const url = "https://openrouter.ai/api/v1/chat/completions";
             
             try {
                 const response = await fetch(url, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
+                        // Changed to a static URL because blob: URLs (from local execution) can be rejected by some providers
+                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
                     },
@@ -352,14 +352,7 @@
                         // If response isn't JSON, throw the text status
                         throw new Error(`API Error ${response.status}: ${errorText}`);
                     }
-                    
-                    // Improved error messaging for the user
-                    const apiMessage = errorObj.error?.message;
-                    if (apiMessage && apiMessage.includes("Provider returned error")) {
-                        throw new Error("The selected model is currently busy or unavailable. Please try a different model from the list.");
-                    }
-                    
-                    throw new Error(apiMessage || `API Error: ${response.statusText}`);
+                    throw new Error(errorObj.error?.message || `API Error: ${response.statusText}`);
                 }
 
                 const data = await response.json();
