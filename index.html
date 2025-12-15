@@ -75,7 +75,6 @@
                 <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Model</label>
                 <div class="relative">
                     <select id="model-select" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer text-gray-300">
-                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash Exp (Free)</option>
                         <option value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</option>
                         <option value="openai/gpt-oss-120b:free">GPT OSS 120B (Free)</option>
                         <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air (Free)</option>
@@ -322,50 +321,32 @@
         }
 
         async function callOpenRouter(apiKey, prompt, model) {
-            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+            const url = "https://openrouter.ai/api/v1/chat/completions";
             
-            try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${apiKey}`,
-                        // Changed to a static URL because blob: URLs (from local execution) can be rejected by some providers
-                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
-                        "X-Title": "AI Website Builder",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        "model": model,
-                        "messages": [
-                            { "role": "system", "content": SYSTEM_PROMPT },
-                            { "role": "user", "content": prompt }
-                        ]
-                    })
-                });
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "HTTP-Referer": window.location.href, // Optional. Site URL for rankings on openrouter.ai.
+                    "X-Title": "AI Website Builder", // Optional. Site title for rankings on openrouter.ai.
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": model,
+                    "messages": [
+                        { "role": "system", "content": SYSTEM_PROMPT },
+                        { "role": "user", "content": prompt }
+                    ]
+                })
+            });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    let errorObj;
-                    try {
-                        errorObj = JSON.parse(errorText);
-                    } catch (e) {
-                        // If response isn't JSON, throw the text status
-                        throw new Error(`API Error ${response.status}: ${errorText}`);
-                    }
-                    throw new Error(errorObj.error?.message || `API Error: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                
-                if (!data.choices || data.choices.length === 0) {
-                     throw new Error("No completion found in response.");
-                }
-
-                return data.choices[0].message.content;
-            } catch (error) {
-                console.error("OpenRouter Call Failed:", error);
-                throw error; // Re-throw to be caught by generateSite
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || 'OpenRouter API Error');
             }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
         }
 
         // --- Initialization ---
