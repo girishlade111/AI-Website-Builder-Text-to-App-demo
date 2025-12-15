@@ -400,7 +400,7 @@
         // Generic function for calling OpenRouter
         async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
             // Fix: Use plain strings for URL and Referer to avoid parsing errors
-            const url = "https://openrouter.ai/api/v1/chat/completions";
+            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
             try {
@@ -408,7 +408,7 @@
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
+                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
                     },
