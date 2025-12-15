@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Website Builder | Text-to-App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -198,6 +199,9 @@
             <div class="flex items-center gap-3 w-32 justify-end">
                 <button onclick="toggleTerminal()" id="btn-terminal-toggle" class="text-zinc-400 hover:text-white transition-colors p-2 rounded hover:bg-zinc-900" title="Toggle Terminal">
                     <i class="fa-solid fa-terminal text-xs"></i>
+                </button>
+                 <button onclick="exportZip()" class="text-zinc-400 hover:text-white transition-colors p-2 rounded hover:bg-zinc-900" title="Export ZIP">
+                    <i class="fa-solid fa-download text-xs"></i>
                 </button>
                 <button onclick="copyCode()" class="text-zinc-400 hover:text-white transition-colors p-2 rounded hover:bg-zinc-900" title="Copy Code">
                     <i class="fa-regular fa-copy text-xs"></i>
@@ -545,6 +549,33 @@
                 appendLog('log-terminal', 'Source code copied.');
             } catch (err) {
                 showToast("Failed to copy code", "error");
+            }
+        }
+
+        async function exportZip() {
+            if (!generatedCode) {
+                showToast("No code generated yet", "error");
+                return;
+            }
+            
+            try {
+                const zip = new JSZip();
+                zip.file("index.html", generatedCode);
+                
+                const blob = await zip.generateAsync({type:"blob"});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = "website_project.zip";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast("Project exported as ZIP!");
+                appendLog('log-terminal', 'Project exported as ZIP.', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast("Export failed", "error");
+                appendLog('log-terminal', `Export Error: ${e.message}`, 'error');
             }
         }
         
