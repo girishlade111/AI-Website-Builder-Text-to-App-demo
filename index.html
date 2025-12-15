@@ -89,8 +89,8 @@
         <!-- Header -->
         <div class="h-14 border-b border-zinc-900 flex items-center justify-between px-5 shrink-0 bg-[#050505]/95 backdrop-blur z-20">
             <div class="flex items-center gap-3">
-                <div class="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
-                    <i class="fa-solid fa-layer-group text-white text-[10px]"></i>
+                <div class="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 shadow-sm">
+                    <i class="fa-solid fa-code text-zinc-300 text-[11px]"></i>
                 </div>
                 <h1 class="font-medium text-sm tracking-tight text-zinc-200">AI Builder</h1>
             </div>
@@ -700,7 +700,7 @@
         }
 
         async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
-            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+            const url = "https://openrouter.ai/api/v1/chat/completions";
             const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
             try {
@@ -708,7 +708,7 @@
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
+                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
                     },
