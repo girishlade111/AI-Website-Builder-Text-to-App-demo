@@ -6,37 +6,47 @@
     <title>AI Website Builder | Text-to-App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+        }
+
         /* Custom Scrollbar - Monochrome */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #000000; 
+            background: #09090b; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #333333; 
+            background: #27272a; 
             border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #555555; 
+            background: #3f3f46; 
         }
 
         /* Editor textarea styling */
         .code-editor {
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            line-height: 1.5;
+            font-family: var(--font-mono);
+            line-height: 1.6;
             tab-size: 2;
         }
 
-        /* Loading Spinner - White */
+        /* Loading Spinner */
         .loader {
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 50%;
             border-top: 2px solid #ffffff;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
@@ -46,194 +56,180 @@
 
         /* Toast Notification Animation */
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         .toast-enter {
             animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
-        /* Matte Finish Utilities */
-        .bg-matte {
-            background-color: #09090b; /* Zinc 950 */
-        }
-        .bg-matte-lighter {
-            background-color: #18181b; /* Zinc 900 */
-        }
-
         /* Terminal Styling */
         .terminal-font {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-family: var(--font-mono);
         }
         .log-entry {
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
         .log-info { color: #a1a1aa; }
         .log-success { color: #4ade80; }
         .log-warn { color: #facc15; }
         .log-error { color: #f87171; }
-        .log-timestamp { color: #52525b; margin-right: 8px; font-size: 0.75rem; }
+        .log-timestamp { color: #52525b; margin-right: 8px; font-size: 0.7rem; }
     </style>
 </head>
-<body class="bg-black text-white font-sans h-screen flex overflow-hidden selection:bg-white selection:text-black">
+<body class="bg-black text-white h-screen flex overflow-hidden selection:bg-white selection:text-black">
 
     <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Sidebar -->
-    <aside class="w-80 flex flex-col border-r border-zinc-800 bg-black z-10 flex-shrink-0">
+    <aside class="w-[340px] flex flex-col border-r border-zinc-900 bg-[#050505] z-10 flex-shrink-0 relative">
         <!-- Header -->
-        <div class="p-5 border-b border-zinc-800 flex items-center gap-3">
-            <div class="w-8 h-8 rounded bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.15)]">
-                <i class="fa-solid fa-code text-black text-sm"></i>
+        <div class="h-14 border-b border-zinc-900 flex items-center px-5 gap-3 shrink-0">
+            <div class="w-6 h-6 rounded bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                <i class="fa-solid fa-code text-black text-[10px]"></i>
             </div>
-            <h1 class="font-bold text-lg tracking-tight text-white">AI Builder</h1>
+            <h1 class="font-semibold text-sm tracking-wide text-white">AI Builder</h1>
         </div>
 
-        <!-- Settings Section -->
-        <div class="p-5 border-b border-zinc-800 space-y-5">
-            <div>
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Select Model</label>
-                <div class="relative group">
-                    <select id="model-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-xs focus:outline-none focus:border-white focus:ring-0 transition-all appearance-none cursor-pointer text-zinc-300 group-hover:border-zinc-700">
-                        <!-- Reliable free model IDs -->
-                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash Exp (Free)</option>
-                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
-                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
-                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct (Free)</option>
-                        <option value="microsoft/phi-3-medium-128k-instruct:free">Phi-3 Medium (Free)</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-zinc-600 text-xs pointer-events-none"></i>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">API Key</label>
-                <div class="relative group">
-                    <input type="password" id="api-key" value="" placeholder="Paste your API key here" class="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-white focus:ring-0 transition-all placeholder-zinc-600 text-white group-hover:border-zinc-700">
-                    <i class="fa-solid fa-key absolute right-3 top-3 text-zinc-600 text-xs"></i>
-                </div>
-                <p class="text-[10px] text-zinc-600 mt-1.5">Key stored locally.</p>
-            </div>
-        </div>
-
-        <!-- Prompt Section -->
-        <div class="p-5 flex-1 flex flex-col min-h-0">
+        <!-- Main Input Area (Flexible Height) -->
+        <div class="flex-1 flex flex-col p-5 min-h-0 overflow-y-auto">
             <div class="flex items-center justify-between mb-3">
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Your Vision</label>
-                <button onclick="enhancePrompt()" id="enhance-btn" class="text-[10px] font-medium flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 px-2.5 py-1 rounded border border-zinc-800 hover:border-zinc-600">
-                    <i id="enhance-icon" class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <label class="text-[11px] font-medium text-zinc-500 uppercase tracking-widest">Vision</label>
+                <button onclick="enhancePrompt()" id="enhance-btn" class="text-[10px] font-medium flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800">
+                    <i id="enhance-icon" class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                     <span>Enhance</span>
                 </button>
             </div>
-            <textarea id="user-prompt" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-md p-4 text-sm focus:outline-none focus:border-white focus:ring-0 transition-all resize-none placeholder-zinc-600 leading-relaxed text-zinc-200" placeholder="Describe the website you want to build...&#10;&#10;Example:&#10;Create a modern landing page for a coffee shop called 'Brew & Bean' with a hero section, menu grid, and a dark aesthetic."></textarea>
             
-            <button id="generate-btn" onclick="generateSite()" class="mt-5 w-full bg-white hover:bg-zinc-200 text-black font-bold py-3.5 rounded-md shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all flex items-center justify-center gap-2 group active:scale-[0.98]">
-                <span id="btn-text">Generate Website</span>
-                <i id="btn-icon" class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                <div id="btn-loader" class="loader hidden"></div>
-            </button>
+            <textarea id="user-prompt" class="flex-1 w-full bg-zinc-900/30 border border-zinc-800 rounded-lg p-4 text-sm focus:outline-none focus:border-zinc-600 focus:bg-zinc-900/50 transition-all resize-none placeholder-zinc-700 leading-relaxed text-zinc-200" placeholder="Describe your web app idea...&#10;&#10;E.g., A minimalist portfolio for a photographer with a masonry grid gallery and a contact form using a dark theme."></textarea>
         </div>
 
-        <div class="p-4 border-t border-zinc-800 flex flex-col items-center gap-4 bg-black">
-            <div class="flex gap-4">
-                <a href="https://github.com/girishlade111" target="_blank" title="GitHub" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-brands fa-github"></i>
-                </a>
-                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" title="LinkedIn" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-brands fa-linkedin"></i>
-                </a>
-                <a href="https://www.instagram.com/girish_lade_/" target="_blank" title="Instagram" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-brands fa-instagram"></i>
-                </a>
-                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" title="CodePen" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-brands fa-codepen"></i>
-                </a>
-                <a href="mailto:girishlade111@gmail.com" title="Email" class="text-zinc-600 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-envelope"></i>
-                </a>
+        <!-- Configuration & Controls (Fixed Bottom) -->
+        <div class="p-5 border-t border-zinc-900 bg-[#050505] space-y-4 shrink-0">
+            
+            <!-- Configuration Grid -->
+            <div class="space-y-3">
+                <!-- Model Select -->
+                <div class="relative group">
+                    <div class="absolute left-3 top-2.5 text-zinc-500 text-xs pointer-events-none">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <select id="model-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:border-zinc-600 transition-all appearance-none cursor-pointer text-zinc-300 group-hover:border-zinc-700">
+                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
+                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder (Free)</option>
+                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-zinc-600 text-[10px] pointer-events-none"></i>
+                </div>
+
+                <!-- API Key -->
+                <div class="relative group">
+                    <div class="absolute left-3 top-2.5 text-zinc-500 text-xs pointer-events-none">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <input type="password" id="api-key" value="" placeholder="OpenRouter API Key" class="w-full bg-zinc-900 border border-zinc-800 rounded-md py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:border-zinc-600 transition-all placeholder-zinc-600 text-white group-hover:border-zinc-700">
+                </div>
             </div>
-            <p class="text-[10px] text-zinc-700 font-medium">Designed by Girish Lade</p>
+
+            <!-- Generate Button -->
+            <button id="generate-btn" onclick="generateSite()" class="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 rounded-md shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all flex items-center justify-center gap-2 group active:scale-[0.99]">
+                <span id="btn-text">Generate</span>
+                <i id="btn-icon" class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                <div id="btn-loader" class="loader hidden"></div>
+            </button>
+
+            <!-- Footer Links -->
+            <div class="pt-2 flex justify-center gap-4 border-t border-zinc-900/50">
+                <a href="https://github.com/girishlade111" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-github text-sm"></i></a>
+                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-linkedin text-sm"></i></a>
+                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-codepen text-sm"></i></a>
+                <a href="mailto:girishlade111@gmail.com" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-solid fa-envelope text-sm"></i></a>
+            </div>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col relative bg-black">
         <!-- Toolbar -->
-        <header class="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-black shrink-0">
-            <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-md border border-zinc-800">
-                <button onclick="setView('preview')" id="tab-preview" class="view-tab active px-4 py-1.5 rounded-[4px] text-xs font-semibold text-black bg-white shadow-sm transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-desktop"></i> Preview
+        <header class="h-14 border-b border-zinc-900 flex items-center justify-between px-4 bg-[#050505] shrink-0">
+            <!-- Left: Spacer/Context -->
+            <div class="w-32">
+                 <span class="text-xs text-zinc-600 font-mono" id="status-indicator">Ready</span>
+            </div>
+
+            <!-- Center: Toggle -->
+            <div class="flex items-center bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
+                <button onclick="setView('preview')" id="tab-preview" class="px-6 py-1.5 rounded-[6px] text-xs font-medium text-black bg-white shadow-sm transition-all flex items-center gap-2">
+                    Preview
                 </button>
-                <button onclick="setView('code')" id="tab-code" class="view-tab px-4 py-1.5 rounded-[4px] text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-code"></i> Code
+                <button onclick="setView('code')" id="tab-code" class="px-6 py-1.5 rounded-[6px] text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-all flex items-center gap-2">
+                    Code
                 </button>
             </div>
 
-            <div class="flex items-center gap-3">
-                <button onclick="toggleTerminal()" id="btn-terminal-toggle" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
-                    <i class="fa-solid fa-terminal"></i> Terminal
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-3 w-32 justify-end">
+                <button onclick="toggleTerminal()" id="btn-terminal-toggle" class="text-zinc-400 hover:text-white transition-colors p-2 rounded hover:bg-zinc-900" title="Toggle Terminal">
+                    <i class="fa-solid fa-terminal text-xs"></i>
                 </button>
-                <div class="h-4 w-px bg-zinc-800"></div>
-                <button onclick="copyCode()" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
-                    <i class="fa-regular fa-copy"></i> Copy HTML
+                <button onclick="copyCode()" class="text-zinc-400 hover:text-white transition-colors p-2 rounded hover:bg-zinc-900" title="Copy Code">
+                    <i class="fa-regular fa-copy text-xs"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Content Area (Split flex-col to allow bottom panel) -->
-        <div class="flex-1 flex flex-col min-h-0">
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col min-h-0 relative">
             
-            <!-- Viewport (Preview/Code) -->
-            <div class="flex-1 relative overflow-hidden">
-                <!-- Preview View (Iframe) -->
+            <!-- Viewport -->
+            <div class="flex-1 relative overflow-hidden bg-zinc-950/50">
+                <!-- Preview View -->
                 <div id="view-preview" class="w-full h-full absolute inset-0 z-10 bg-white">
                     <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
                     
                     <!-- Empty State -->
-                    <div id="empty-state" class="absolute inset-0 bg-black flex flex-col items-center justify-center text-zinc-500">
-                        <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 shadow-2xl">
-                            <i class="fa-solid fa-layer-group text-2xl text-zinc-600"></i>
+                    <div id="empty-state" class="absolute inset-0 bg-[#09090b] flex flex-col items-center justify-center text-zinc-600">
+                        <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 shadow-xl">
+                            <i class="fa-solid fa-cube text-xl text-zinc-500"></i>
                         </div>
-                        <p class="text-sm font-medium tracking-wide">READY TO BUILD</p>
+                        <p class="text-xs font-medium tracking-widest uppercase text-zinc-500">Awaiting Input</p>
                     </div>
                 </div>
 
                 <!-- Code View -->
-                <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-black hidden">
-                    <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#050505] text-zinc-300 p-6 border-none outline-none resize-none text-sm font-mono"></textarea>
+                <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-[#050505] hidden">
+                    <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#050505] text-zinc-400 p-6 border-none outline-none resize-none text-xs"></textarea>
                 </div>
             </div>
 
-            <!-- Terminal / Console Panel -->
-            <div id="bottom-panel" class="h-48 bg-[#09090b] border-t border-zinc-800 flex flex-col hidden transition-all">
+            <!-- Terminal Panel -->
+            <div id="bottom-panel" class="h-48 bg-[#050505] border-t border-zinc-900 flex flex-col hidden transition-all absolute bottom-0 left-0 right-0 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                 <!-- Panel Header -->
-                <div class="h-9 border-b border-zinc-800 flex items-center justify-between px-4 bg-black">
-                    <div class="flex items-center gap-6 h-full">
-                        <button onclick="setPanelTab('terminal')" id="tab-terminal" class="panel-tab h-full text-[11px] font-bold uppercase tracking-wider border-b-2 border-white text-white transition-all">Terminal</button>
-                        <button onclick="setPanelTab('console')" id="tab-console" class="panel-tab h-full text-[11px] font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 transition-all">Console</button>
+                <div class="h-8 border-b border-zinc-900 flex items-center justify-between px-3 bg-[#050505]">
+                    <div class="flex items-center gap-4 h-full">
+                        <button onclick="setPanelTab('terminal')" id="tab-terminal" class="panel-tab h-full text-[10px] font-bold uppercase tracking-wider border-b border-white text-white transition-all">Terminal</button>
+                        <button onclick="setPanelTab('console')" id="tab-console" class="panel-tab h-full text-[10px] font-bold uppercase tracking-wider border-b border-transparent text-zinc-600 hover:text-zinc-400 transition-all">Console</button>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="clearCurrentLog()" class="text-zinc-500 hover:text-white transition-colors" title="Clear">
-                            <i class="fa-solid fa-ban text-xs"></i>
+                        <button onclick="clearCurrentLog()" class="text-zinc-600 hover:text-white transition-colors" title="Clear">
+                            <i class="fa-solid fa-ban text-[10px]"></i>
                         </button>
-                        <button onclick="toggleTerminal()" class="text-zinc-500 hover:text-white transition-colors" title="Close">
-                            <i class="fa-solid fa-xmark text-xs"></i>
+                        <button onclick="toggleTerminal()" class="text-zinc-600 hover:text-white transition-colors" title="Close">
+                            <i class="fa-solid fa-xmark text-[10px]"></i>
                         </button>
                     </div>
                 </div>
                 
                 <!-- Panel Content -->
-                <div class="flex-1 overflow-auto p-2 terminal-font text-xs" id="panel-content">
-                    <!-- Terminal Logs -->
+                <div class="flex-1 overflow-auto p-3 terminal-font text-[11px]" id="panel-content">
                     <div id="log-terminal" class="flex flex-col">
-                        <div class="log-entry log-info"><span class="log-timestamp">SYSTEM</span> Welcome to AI Website Builder Terminal.</div>
-                        <div class="log-entry log-info"><span class="log-timestamp">SYSTEM</span> Ready for input.</div>
+                        <div class="log-entry log-info"><span class="log-timestamp">SYSTEM</span> Terminal ready.</div>
                     </div>
-                    <!-- Console Logs -->
                     <div id="log-console" class="flex flex-col hidden">
-                        <div class="log-entry log-info text-zinc-600 italic">Console logs from the generated website will appear here...</div>
+                        <div class="log-entry log-info text-zinc-600 italic">No output captured yet.</div>
                     </div>
                 </div>
             </div>
@@ -245,7 +241,6 @@
         let generatedCode = '';
         let activePanel = 'terminal';
         
-        // System Prompt: The core instruction set for the AI
         const SYSTEM_PROMPT = `
         You are an expert Frontend Web Developer and UI/UX Designer. 
         Your task is to generate a complete, production-ready, single-file HTML website based on the user's request.
@@ -279,11 +274,11 @@
 
             if (shouldShow) {
                 panel.classList.remove('hidden');
-                btn.classList.add('bg-zinc-900', 'text-white');
+                btn.classList.add('text-white');
                 btn.classList.remove('text-zinc-400');
             } else {
                 panel.classList.add('hidden');
-                btn.classList.remove('bg-zinc-900', 'text-white');
+                btn.classList.remove('text-white');
                 btn.classList.add('text-zinc-400');
             }
         }
@@ -291,16 +286,14 @@
         function setPanelTab(tab) {
             activePanel = tab;
             
-            // Tab UI
             document.querySelectorAll('.panel-tab').forEach(el => {
                 el.classList.remove('border-white', 'text-white');
-                el.classList.add('border-transparent', 'text-zinc-500');
+                el.classList.add('border-transparent', 'text-zinc-600');
             });
             const activeTab = document.getElementById(`tab-${tab}`);
-            activeTab.classList.remove('border-transparent', 'text-zinc-500');
+            activeTab.classList.remove('border-transparent', 'text-zinc-600');
             activeTab.classList.add('border-white', 'text-white');
 
-            // Content Visibility
             document.getElementById('log-terminal').classList.toggle('hidden', tab !== 'terminal');
             document.getElementById('log-console').classList.toggle('hidden', tab !== 'console');
         }
@@ -316,11 +309,9 @@
             if (type === 'error') typeClass = 'log-error';
 
             entry.className = `log-entry ${typeClass}`;
-            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            entry.innerHTML = `<span class="log-timestamp">${timestamp}</span> ${message}`;
             
             container.appendChild(entry);
-            
-            // Auto-scroll
             const panelContent = document.getElementById('panel-content');
             panelContent.scrollTop = panelContent.scrollHeight;
         }
@@ -345,24 +336,20 @@
                 previewEl.classList.remove('hidden');
                 codeEl.classList.add('hidden');
                 
-                // Active State (Preview)
                 tabPreview.classList.add('bg-white', 'text-black', 'shadow-sm');
-                tabPreview.classList.remove('text-zinc-500');
+                tabPreview.classList.remove('text-zinc-500', 'hover:text-zinc-300');
                 
-                // Inactive State (Code)
                 tabCode.classList.remove('bg-white', 'text-black', 'shadow-sm');
-                tabCode.classList.add('text-zinc-500');
+                tabCode.classList.add('text-zinc-500', 'hover:text-zinc-300');
             } else {
                 previewEl.classList.add('hidden');
                 codeEl.classList.remove('hidden');
 
-                // Active State (Code)
                 tabCode.classList.add('bg-white', 'text-black', 'shadow-sm');
-                tabCode.classList.remove('text-zinc-500');
+                tabCode.classList.remove('text-zinc-500', 'hover:text-zinc-300');
 
-                // Inactive State (Preview)
                 tabPreview.classList.remove('bg-white', 'text-black', 'shadow-sm');
-                tabPreview.classList.add('text-zinc-500');
+                tabPreview.classList.add('text-zinc-500', 'hover:text-zinc-300');
             }
         }
 
@@ -379,14 +366,14 @@
                 ? '<i class="fa-solid fa-circle-exclamation"></i>' 
                 : '<i class="fa-solid fa-check-circle"></i>';
 
-            toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-md border backdrop-blur-md shadow-2xl text-sm font-medium ${styleClass}`;
+            toast.className = `toast-enter pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full border backdrop-blur-md shadow-2xl text-xs font-medium ${styleClass}`;
             toast.innerHTML = `<span class="${iconColor}">${icon}</span> <span>${message}</span>`;
 
             container.appendChild(toast);
 
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.style.transform = 'translateY(-20px)';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
@@ -400,6 +387,7 @@
             const promptInput = document.getElementById('user-prompt');
             const modelSelect = document.getElementById('model-select');
             const enhanceBtn = document.getElementById('enhance-btn');
+            const statusInd = document.getElementById('status-indicator');
 
             if (isLoading) {
                 btn.disabled = true;
@@ -412,10 +400,12 @@
                 modelSelect.disabled = true;
                 enhanceBtn.disabled = true;
                 enhanceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                statusInd.innerText = "Generating...";
+                statusInd.classList.add('text-blue-400');
             } else {
                 btn.disabled = false;
                 btn.classList.remove('opacity-80', 'cursor-not-allowed');
-                btnText.innerText = 'Generate Website';
+                btnText.innerText = 'Generate';
                 btnIcon.classList.remove('hidden');
                 btnLoader.classList.add('hidden');
                 apiKeyInput.disabled = false;
@@ -423,57 +413,40 @@
                 modelSelect.disabled = false;
                 enhanceBtn.disabled = false;
                 enhanceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                statusInd.innerText = "Ready";
+                statusInd.classList.remove('text-blue-400');
             }
         }
 
         function updatePreview(html) {
             const frame = document.getElementById('preview-frame');
             
-            // Inject Console Capture Script
-            // This script overrides the standard console functions within the iframe 
-            // and posts a message back to the parent window.
             const consoleScript = `
                 <script>
                     (function() {
                         const originalLog = console.log;
                         const originalWarn = console.warn;
                         const originalError = console.error;
-
                         function sendToParent(type, args) {
                             try {
-                                // Convert args to string for safe transmission
                                 const message = Array.from(args).map(arg => {
                                     if (typeof arg === 'object') return JSON.stringify(arg);
                                     return String(arg);
                                 }).join(' ');
-                                
                                 window.parent.postMessage({
                                     source: 'ai-builder-iframe',
                                     type: type,
                                     message: message
                                 }, '*');
-                            } catch (e) {
-                                // Fallback if postMessage fails
-                            }
+                            } catch (e) {}
                         }
-
-                        console.log = function(...args) {
-                            originalLog.apply(console, args);
-                            sendToParent('info', args);
-                        };
-                        console.warn = function(...args) {
-                            originalWarn.apply(console, args);
-                            sendToParent('warn', args);
-                        };
-                        console.error = function(...args) {
-                            originalError.apply(console, args);
-                            sendToParent('error', args);
-                        };
+                        console.log = function(...args) { originalLog.apply(console, args); sendToParent('info', args); };
+                        console.warn = function(...args) { originalWarn.apply(console, args); sendToParent('warn', args); };
+                        console.error = function(...args) { originalError.apply(console, args); sendToParent('error', args); };
                     })();
                 <\/script>
             `;
 
-            // Insert script right after <head> or at start of <html> if no head
             let finalHtml = html;
             if (html.includes('<head>')) {
                 finalHtml = html.replace('<head>', '<head>' + consoleScript);
@@ -486,13 +459,12 @@
             frame.src = url;
             
             document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('code-output').value = html; // Keep original HTML in code view
+            document.getElementById('code-output').value = html;
             generatedCode = html;
             
             appendLog('log-terminal', 'Preview updated successfully.', 'success');
         }
 
-        // Listener for Console Messages from Iframe
         window.addEventListener('message', function(event) {
             if (event.data && event.data.source === 'ai-builder-iframe') {
                 appendLog('log-console', event.data.message, event.data.type);
@@ -507,14 +479,11 @@
             try {
                 await navigator.clipboard.writeText(generatedCode);
                 showToast("Code copied to clipboard!");
-                appendLog('log-terminal', 'Source code copied to clipboard.');
+                appendLog('log-terminal', 'Source code copied.');
             } catch (err) {
                 showToast("Failed to copy code", "error");
-                appendLog('log-terminal', 'Failed to copy code.', 'error');
             }
         }
-
-        // --- Core Logic: API Communication ---
         
         async function enhancePrompt() {
             const apiKey = document.getElementById('api-key').value.trim();
@@ -525,43 +494,34 @@
             const btn = document.getElementById('enhance-btn');
 
             if (!apiKey) {
-                showToast("Please enter your API Key", "error");
+                showToast("Enter API Key first", "error");
                 return;
             }
             if (!prompt) {
-                showToast("Enter a basic prompt to enhance", "error");
+                showToast("Enter a basic vision first", "error");
                 return;
             }
 
-            // Open terminal to show process
             toggleTerminal(true);
             setPanelTab('terminal');
-            appendLog('log-terminal', 'Initiating prompt enhancement...');
+            appendLog('log-terminal', 'Enhancing prompt...');
 
-            // Loading state for enhance button
             const originalIconClass = btnIcon.className;
-            btnIcon.className = "fa-solid fa-circle-notch fa-spin";
+            btnIcon.className = "fa-solid fa-circle-notch fa-spin text-[10px]";
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
 
             try {
-                const systemPrompt = "You are an expert prompt engineer for web development. Rewrite the following user prompt to be comprehensive, detailed, and structured specifically for an AI that generates HTML/Tailwind code. Focus on layout, visual style, color schemes (suggest modern palettes), and specific features. Keep the tone technical but clear. Output ONLY the enhanced prompt, no conversational text.";
-                
-                // Use the generic call function with a custom system prompt
+                const systemPrompt = "You are an expert prompt engineer. Rewrite the user prompt to be detailed and technical for an AI that generates HTML/Tailwind code. Focus on layout, aesthetics, and features. Output ONLY the enhanced prompt text.";
                 const enhanced = await callOpenRouter(apiKey, prompt, model, systemPrompt);
-                
-                // Remove quotes if the AI wraps the output
                 const cleanEnhanced = enhanced.replace(/^["']|["']$/g, '').trim();
-                
                 promptInput.value = cleanEnhanced;
-                showToast("Prompt enhanced successfully!");
-                appendLog('log-terminal', 'Prompt enhancement complete.', 'success');
+                showToast("Prompt enhanced!");
+                appendLog('log-terminal', 'Prompt enhanced.', 'success');
             } catch (e) {
-                console.error(e);
-                showToast(e.message || "Failed to enhance prompt", "error");
-                appendLog('log-terminal', `Enhancement Error: ${e.message}`, 'error');
+                showToast("Enhance failed", "error");
+                appendLog('log-terminal', `Error: ${e.message}`, 'error');
             } finally {
-                // Reset state
                 btnIcon.className = originalIconClass;
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -578,47 +538,36 @@
                 return;
             }
             if (!prompt) {
-                showToast("Please describe your website", "error");
+                showToast("Please describe your vision", "error");
                 return;
             }
 
             toggleLoading(true);
-            
-            // Open terminal
             toggleTerminal(true);
             setPanelTab('terminal');
-            clearCurrentLog(); // Start fresh for new build
-            document.getElementById('log-console').innerHTML = ''; // Clear old console logs
+            clearCurrentLog();
+            document.getElementById('log-console').innerHTML = '';
             
-            appendLog('log-terminal', `Starting build process using ${model}...`);
-            appendLog('log-terminal', 'Connecting to OpenRouter API...');
+            appendLog('log-terminal', `Initializing build: ${model}`);
 
             try {
-                // Direct call to OpenRouter with selected model, using default system prompt
                 let htmlContent = await callOpenRouter(apiKey, prompt, model);
-                
-                appendLog('log-terminal', 'Code received from API. Processing...');
-
-                // Clean the output (remove markdown fences if AI ignores prompt)
+                appendLog('log-terminal', 'Data received. Rendering...');
                 const cleanHtml = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
-                
                 updatePreview(cleanHtml);
-                setView('preview'); // Switch to preview tab on success
-                showToast("Website generated successfully!");
-                appendLog('log-terminal', 'Build successful. Preview rendered.', 'success');
-
+                setView('preview');
+                showToast("Website generated!");
+                appendLog('log-terminal', 'Build complete.', 'success');
             } catch (error) {
                 console.error(error);
-                showToast(error.message || "Generation failed", "error");
-                appendLog('log-terminal', `Build Failed: ${error.message}`, 'error');
+                showToast("Generation failed", "error");
+                appendLog('log-terminal', `Error: ${error.message}`, 'error');
             } finally {
                 toggleLoading(false);
             }
         }
 
-        // Generic function for calling OpenRouter
         async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
-            // Fix: Use plain strings for URL and Referer to avoid parsing errors
             const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
@@ -643,53 +592,36 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     let errorObj;
-                    try {
-                        errorObj = JSON.parse(errorText);
-                    } catch (e) {
-                        throw new Error(`API Error ${response.status}: ${errorText}`);
-                    }
-                    
+                    try { errorObj = JSON.parse(errorText); } catch (e) { throw new Error(`API Error ${response.status}`); }
                     const apiMessage = errorObj.error?.message;
                     if (apiMessage && apiMessage.includes("Provider returned error")) {
-                        throw new Error("The selected model is currently busy. Please try a different model.");
+                        throw new Error("Model unavailable/busy. Try another.");
                     }
-                    
                     throw new Error(apiMessage || `API Error: ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                
-                if (!data.choices || data.choices.length === 0) {
-                     throw new Error("No completion found in response.");
-                }
-
+                if (!data.choices || data.choices.length === 0) throw new Error("No completion found.");
                 return data.choices[0].message.content;
             } catch (error) {
-                console.error("OpenRouter Call Failed:", error);
                 throw error;
             }
         }
 
-        // --- Initialization ---
-        // Setup simple key bindings or initial states if needed
+        // --- Init ---
         document.getElementById('user-prompt').addEventListener('keydown', function(e) {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                 generateSite();
             }
         });
 
-        // Sync Code Editor changes back to Preview (Live Editing)
-        let debounceTimer;
         document.getElementById('code-output').addEventListener('input', function(e) {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                const newCode = e.target.value;
-                generatedCode = newCode;
-                // Don't inject script here again for simplicity, or do full updatePreview
-                updatePreview(newCode); 
-            }, 1000); // 1s delay before re-rendering to prevent stutter
+            const newCode = e.target.value;
+            generatedCode = newCode;
+            // Debounce handled by user typing speed naturally, strict update on paste/stop
+            clearTimeout(window.updateTimer);
+            window.updateTimer = setTimeout(() => updatePreview(newCode), 800);
         });
-
     </script>
 </body>
 </html>
