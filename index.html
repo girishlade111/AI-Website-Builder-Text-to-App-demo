@@ -72,15 +72,10 @@
         <!-- Settings Section -->
         <div class="p-5 border-b border-gray-800 space-y-4">
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Model</label>
-                <div class="relative">
-                    <select id="model-select" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer text-gray-300">
-                        <option value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</option>
-                        <option value="openai/gpt-oss-120b:free">GPT OSS 120B (Free)</option>
-                        <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air (Free)</option>
-                        <option value="moonshotai/kimi-k2:free">Moonshot Kimi K2 (Free)</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-gray-600 text-xs pointer-events-none"></i>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">AI Provider</label>
+                <!-- Updated to grid-cols-1 for single provider -->
+                <div class="grid grid-cols-1 bg-gray-950 p-1 rounded-lg border border-gray-800 gap-1">
+                    <button class="provider-btn active text-xs py-2 rounded-md font-medium transition-all bg-gray-800 text-white shadow-sm truncate cursor-default">OpenRouter</button>
                 </div>
             </div>
 
@@ -156,6 +151,7 @@
 
     <script>
         // --- Configuration & State ---
+        let currentProvider = 'openrouter';
         let generatedCode = '';
         
         // System Prompt: The core instruction set for the AI
@@ -236,7 +232,6 @@
             const btnLoader = document.getElementById('btn-loader');
             const apiKeyInput = document.getElementById('api-key');
             const promptInput = document.getElementById('user-prompt');
-            const modelSelect = document.getElementById('model-select');
 
             if (isLoading) {
                 btn.disabled = true;
@@ -246,7 +241,6 @@
                 btnLoader.classList.remove('hidden');
                 apiKeyInput.disabled = true;
                 promptInput.disabled = true;
-                modelSelect.disabled = true;
             } else {
                 btn.disabled = false;
                 btn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -255,7 +249,6 @@
                 btnLoader.classList.add('hidden');
                 apiKeyInput.disabled = false;
                 promptInput.disabled = false;
-                modelSelect.disabled = false;
             }
         }
 
@@ -288,7 +281,6 @@
         async function generateSite() {
             const apiKey = document.getElementById('api-key').value.trim();
             const prompt = document.getElementById('user-prompt').value.trim();
-            const model = document.getElementById('model-select').value;
 
             if (!apiKey) {
                 showToast("Please enter your API Key", "error");
@@ -302,8 +294,8 @@
             toggleLoading(true);
 
             try {
-                // Direct call to OpenRouter with selected model
-                let htmlContent = await callOpenRouter(apiKey, prompt, model);
+                // Direct call to OpenRouter
+                let htmlContent = await callOpenRouter(apiKey, prompt);
 
                 // Clean the output (remove markdown fences if AI ignores prompt)
                 const cleanHtml = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
@@ -320,7 +312,7 @@
             }
         }
 
-        async function callOpenRouter(apiKey, prompt, model) {
+        async function callOpenRouter(apiKey, prompt) {
             const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             
             const response = await fetch(url, {
@@ -332,7 +324,7 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": model,
+                    "model": "qwen/qwen3-coder:free",
                     "messages": [
                         { "role": "system", "content": SYSTEM_PROMPT },
                         { "role": "user", "content": prompt }
