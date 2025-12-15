@@ -45,8 +45,8 @@
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 50%;
             border-top: 2px solid #ffffff;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
@@ -107,46 +107,43 @@
         </div>
 
         <!-- Configuration & Controls (Fixed Bottom) -->
-        <div class="p-5 border-t border-zinc-900 bg-[#050505] space-y-4 shrink-0">
+        <div class="p-5 border-t border-zinc-900 bg-[#050505] shrink-0">
             
-            <!-- Configuration Grid -->
-            <div class="space-y-3">
-                <!-- Model Select -->
-                <div class="relative group">
-                    <div class="absolute left-3 top-2.5 text-zinc-500 text-xs pointer-events-none">
-                        <i class="fa-solid fa-microchip"></i>
+            <!-- Unified Action Card -->
+            <div class="bg-white rounded-lg p-1.5 shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all">
+                
+                <!-- Compact Settings Row -->
+                <div class="flex gap-1.5 mb-1.5">
+                    <!-- Key Input -->
+                    <div class="relative flex-1 group">
+                        <input type="password" id="api-key" value="" placeholder="API Key" class="w-full h-8 bg-zinc-100 text-zinc-900 text-[10px] font-medium rounded px-2 focus:bg-zinc-50 focus:ring-1 focus:ring-zinc-300 outline-none placeholder-zinc-400 transition-all">
                     </div>
-                    <select id="model-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:border-zinc-600 transition-all appearance-none cursor-pointer text-zinc-300 group-hover:border-zinc-700">
-                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
-                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
-                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder (Free)</option>
-                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-zinc-600 text-[10px] pointer-events-none"></i>
+                    <!-- Model Select -->
+                    <div class="relative flex-1">
+                        <select id="model-select" class="w-full h-8 bg-zinc-100 text-zinc-900 text-[10px] font-medium rounded px-2 focus:bg-zinc-50 outline-none appearance-none cursor-pointer truncate">
+                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 (Free)</option>
+                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 (Free)</option>
+                            <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 (Free)</option>
+                            <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-2 top-2.5 text-zinc-400 text-[8px] pointer-events-none"></i>
+                    </div>
                 </div>
 
-                <!-- API Key -->
-                <div class="relative group">
-                    <div class="absolute left-3 top-2.5 text-zinc-500 text-xs pointer-events-none">
-                        <i class="fa-solid fa-key"></i>
-                    </div>
-                    <input type="password" id="api-key" value="" placeholder="OpenRouter API Key" class="w-full bg-zinc-900 border border-zinc-800 rounded-md py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:border-zinc-600 transition-all placeholder-zinc-600 text-white group-hover:border-zinc-700">
-                </div>
+                <!-- Main Action Button -->
+                <button id="generate-btn" onclick="generateSite()" class="w-full bg-black hover:bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wide py-2.5 rounded flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                    <span id="btn-text">Generate</span>
+                    <i id="btn-icon" class="fa-solid fa-arrow-right text-[10px]"></i>
+                    <div id="btn-loader" class="loader hidden"></div>
+                </button>
             </div>
 
-            <!-- Generate Button -->
-            <button id="generate-btn" onclick="generateSite()" class="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 rounded-md shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all flex items-center justify-center gap-2 group active:scale-[0.99]">
-                <span id="btn-text">Generate</span>
-                <i id="btn-icon" class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
-                <div id="btn-loader" class="loader hidden"></div>
-            </button>
-
-            <!-- Footer Links -->
-            <div class="pt-2 flex justify-center gap-4 border-t border-zinc-900/50">
-                <a href="https://github.com/girishlade111" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-github text-sm"></i></a>
-                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-linkedin text-sm"></i></a>
-                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-codepen text-sm"></i></a>
-                <a href="mailto:girishlade111@gmail.com" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-solid fa-envelope text-sm"></i></a>
+            <!-- Minimal Footer -->
+            <div class="pt-4 flex justify-center gap-5 border-t border-zinc-900/0 mt-2">
+                <a href="https://github.com/girishlade111" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-github text-xs"></i></a>
+                <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-linkedin text-xs"></i></a>
+                <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-brands fa-codepen text-xs"></i></a>
+                <a href="mailto:girishlade111@gmail.com" class="text-zinc-600 hover:text-white transition-colors"><i class="fa-solid fa-envelope text-xs"></i></a>
             </div>
         </div>
     </aside>
