@@ -60,6 +60,20 @@
         .bg-matte-lighter {
             background-color: #18181b; /* Zinc 900 */
         }
+
+        /* Terminal Styling */
+        .terminal-font {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .log-info { color: #a1a1aa; }
+        .log-success { color: #4ade80; }
+        .log-warn { color: #facc15; }
+        .log-error { color: #f87171; }
+        .log-timestamp { color: #52525b; margin-right: 8px; font-size: 0.75rem; }
     </style>
 </head>
 <body class="bg-black text-white font-sans h-screen flex overflow-hidden selection:bg-white selection:text-black">
@@ -147,7 +161,7 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col relative bg-black">
         <!-- Toolbar -->
-        <header class="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-black">
+        <header class="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-black shrink-0">
             <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-md border border-zinc-800">
                 <button onclick="setView('preview')" id="tab-preview" class="view-tab active px-4 py-1.5 rounded-[4px] text-xs font-semibold text-black bg-white shadow-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-desktop"></i> Preview
@@ -158,31 +172,70 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <button onclick="toggleTerminal()" id="btn-terminal-toggle" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
+                    <i class="fa-solid fa-terminal"></i> Terminal
+                </button>
+                <div class="h-4 w-px bg-zinc-800"></div>
                 <button onclick="copyCode()" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
                     <i class="fa-regular fa-copy"></i> Copy HTML
                 </button>
             </div>
         </header>
 
-        <!-- Content Area -->
-        <div class="flex-1 relative overflow-hidden">
+        <!-- Content Area (Split flex-col to allow bottom panel) -->
+        <div class="flex-1 flex flex-col min-h-0">
             
-            <!-- Preview View (Iframe) -->
-            <div id="view-preview" class="w-full h-full absolute inset-0 z-10 bg-white">
-                <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
-                
-                <!-- Empty State -->
-                <div id="empty-state" class="absolute inset-0 bg-black flex flex-col items-center justify-center text-zinc-500">
-                    <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 shadow-2xl">
-                        <i class="fa-solid fa-layer-group text-2xl text-zinc-600"></i>
+            <!-- Viewport (Preview/Code) -->
+            <div class="flex-1 relative overflow-hidden">
+                <!-- Preview View (Iframe) -->
+                <div id="view-preview" class="w-full h-full absolute inset-0 z-10 bg-white">
+                    <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
+                    
+                    <!-- Empty State -->
+                    <div id="empty-state" class="absolute inset-0 bg-black flex flex-col items-center justify-center text-zinc-500">
+                        <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 shadow-2xl">
+                            <i class="fa-solid fa-layer-group text-2xl text-zinc-600"></i>
+                        </div>
+                        <p class="text-sm font-medium tracking-wide">READY TO BUILD</p>
                     </div>
-                    <p class="text-sm font-medium tracking-wide">READY TO BUILD</p>
+                </div>
+
+                <!-- Code View -->
+                <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-black hidden">
+                    <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#050505] text-zinc-300 p-6 border-none outline-none resize-none text-sm font-mono"></textarea>
                 </div>
             </div>
 
-            <!-- Code View -->
-            <div id="view-code" class="w-full h-full absolute inset-0 z-0 bg-black hidden">
-                <textarea id="code-output" spellcheck="false" class="code-editor w-full h-full bg-[#050505] text-zinc-300 p-6 border-none outline-none resize-none text-sm font-mono"></textarea>
+            <!-- Terminal / Console Panel -->
+            <div id="bottom-panel" class="h-48 bg-[#09090b] border-t border-zinc-800 flex flex-col hidden transition-all">
+                <!-- Panel Header -->
+                <div class="h-9 border-b border-zinc-800 flex items-center justify-between px-4 bg-black">
+                    <div class="flex items-center gap-6 h-full">
+                        <button onclick="setPanelTab('terminal')" id="tab-terminal" class="panel-tab h-full text-[11px] font-bold uppercase tracking-wider border-b-2 border-white text-white transition-all">Terminal</button>
+                        <button onclick="setPanelTab('console')" id="tab-console" class="panel-tab h-full text-[11px] font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 transition-all">Console</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="clearCurrentLog()" class="text-zinc-500 hover:text-white transition-colors" title="Clear">
+                            <i class="fa-solid fa-ban text-xs"></i>
+                        </button>
+                        <button onclick="toggleTerminal()" class="text-zinc-500 hover:text-white transition-colors" title="Close">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Panel Content -->
+                <div class="flex-1 overflow-auto p-2 terminal-font text-xs" id="panel-content">
+                    <!-- Terminal Logs -->
+                    <div id="log-terminal" class="flex flex-col">
+                        <div class="log-entry log-info"><span class="log-timestamp">SYSTEM</span> Welcome to AI Website Builder Terminal.</div>
+                        <div class="log-entry log-info"><span class="log-timestamp">SYSTEM</span> Ready for input.</div>
+                    </div>
+                    <!-- Console Logs -->
+                    <div id="log-console" class="flex flex-col hidden">
+                        <div class="log-entry log-info text-zinc-600 italic">Console logs from the generated website will appear here...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -190,6 +243,7 @@
     <script>
         // --- Configuration & State ---
         let generatedCode = '';
+        let activePanel = 'terminal';
         
         // System Prompt: The core instruction set for the AI
         const SYSTEM_PROMPT = `
@@ -213,6 +267,71 @@
            - Use "https://placehold.co/600x400" (or appropriate dimensions) for images.
         4. If the user asks for a specific component, build it within a full page layout so it looks good.
         `;
+
+        // --- Terminal & Console Logic ---
+
+        function toggleTerminal(forceState) {
+            const panel = document.getElementById('bottom-panel');
+            const btn = document.getElementById('btn-terminal-toggle');
+            
+            const isHidden = panel.classList.contains('hidden');
+            const shouldShow = forceState !== undefined ? forceState : isHidden;
+
+            if (shouldShow) {
+                panel.classList.remove('hidden');
+                btn.classList.add('bg-zinc-900', 'text-white');
+                btn.classList.remove('text-zinc-400');
+            } else {
+                panel.classList.add('hidden');
+                btn.classList.remove('bg-zinc-900', 'text-white');
+                btn.classList.add('text-zinc-400');
+            }
+        }
+
+        function setPanelTab(tab) {
+            activePanel = tab;
+            
+            // Tab UI
+            document.querySelectorAll('.panel-tab').forEach(el => {
+                el.classList.remove('border-white', 'text-white');
+                el.classList.add('border-transparent', 'text-zinc-500');
+            });
+            const activeTab = document.getElementById(`tab-${tab}`);
+            activeTab.classList.remove('border-transparent', 'text-zinc-500');
+            activeTab.classList.add('border-white', 'text-white');
+
+            // Content Visibility
+            document.getElementById('log-terminal').classList.toggle('hidden', tab !== 'terminal');
+            document.getElementById('log-console').classList.toggle('hidden', tab !== 'console');
+        }
+
+        function appendLog(targetId, message, type = 'info') {
+            const container = document.getElementById(targetId);
+            const entry = document.createElement('div');
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour12: false });
+            let typeClass = 'log-info';
+            if (type === 'success') typeClass = 'log-success';
+            if (type === 'warn') typeClass = 'log-warn';
+            if (type === 'error') typeClass = 'log-error';
+
+            entry.className = `log-entry ${typeClass}`;
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            
+            container.appendChild(entry);
+            
+            // Auto-scroll
+            const panelContent = document.getElementById('panel-content');
+            panelContent.scrollTop = panelContent.scrollHeight;
+        }
+
+        function clearCurrentLog() {
+            const id = activePanel === 'terminal' ? 'log-terminal' : 'log-console';
+            document.getElementById(id).innerHTML = '';
+            if (activePanel === 'terminal') {
+                appendLog('log-terminal', 'Terminal cleared.');
+            }
+        }
 
         // --- UI Interactions ---
 
@@ -251,7 +370,6 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
-            // Monochrome toast styles with slight color hint for status
             const styleClass = type === 'error' 
                 ? 'bg-zinc-900 border-red-900/50 text-red-200' 
                 : 'bg-zinc-900 border-zinc-800 text-white';
@@ -310,14 +428,76 @@
 
         function updatePreview(html) {
             const frame = document.getElementById('preview-frame');
-            const blob = new Blob([html], { type: 'text/html' });
+            
+            // Inject Console Capture Script
+            // This script overrides the standard console functions within the iframe 
+            // and posts a message back to the parent window.
+            const consoleScript = `
+                <script>
+                    (function() {
+                        const originalLog = console.log;
+                        const originalWarn = console.warn;
+                        const originalError = console.error;
+
+                        function sendToParent(type, args) {
+                            try {
+                                // Convert args to string for safe transmission
+                                const message = Array.from(args).map(arg => {
+                                    if (typeof arg === 'object') return JSON.stringify(arg);
+                                    return String(arg);
+                                }).join(' ');
+                                
+                                window.parent.postMessage({
+                                    source: 'ai-builder-iframe',
+                                    type: type,
+                                    message: message
+                                }, '*');
+                            } catch (e) {
+                                // Fallback if postMessage fails
+                            }
+                        }
+
+                        console.log = function(...args) {
+                            originalLog.apply(console, args);
+                            sendToParent('info', args);
+                        };
+                        console.warn = function(...args) {
+                            originalWarn.apply(console, args);
+                            sendToParent('warn', args);
+                        };
+                        console.error = function(...args) {
+                            originalError.apply(console, args);
+                            sendToParent('error', args);
+                        };
+                    })();
+                <\/script>
+            `;
+
+            // Insert script right after <head> or at start of <html> if no head
+            let finalHtml = html;
+            if (html.includes('<head>')) {
+                finalHtml = html.replace('<head>', '<head>' + consoleScript);
+            } else {
+                finalHtml = consoleScript + html;
+            }
+
+            const blob = new Blob([finalHtml], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             frame.src = url;
             
             document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('code-output').value = html;
+            document.getElementById('code-output').value = html; // Keep original HTML in code view
             generatedCode = html;
+            
+            appendLog('log-terminal', 'Preview updated successfully.', 'success');
         }
+
+        // Listener for Console Messages from Iframe
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.source === 'ai-builder-iframe') {
+                appendLog('log-console', event.data.message, event.data.type);
+            }
+        });
 
         async function copyCode() {
             if (!generatedCode) {
@@ -327,8 +507,10 @@
             try {
                 await navigator.clipboard.writeText(generatedCode);
                 showToast("Code copied to clipboard!");
+                appendLog('log-terminal', 'Source code copied to clipboard.');
             } catch (err) {
                 showToast("Failed to copy code", "error");
+                appendLog('log-terminal', 'Failed to copy code.', 'error');
             }
         }
 
@@ -351,6 +533,11 @@
                 return;
             }
 
+            // Open terminal to show process
+            toggleTerminal(true);
+            setPanelTab('terminal');
+            appendLog('log-terminal', 'Initiating prompt enhancement...');
+
             // Loading state for enhance button
             const originalIconClass = btnIcon.className;
             btnIcon.className = "fa-solid fa-circle-notch fa-spin";
@@ -368,9 +555,11 @@
                 
                 promptInput.value = cleanEnhanced;
                 showToast("Prompt enhanced successfully!");
+                appendLog('log-terminal', 'Prompt enhancement complete.', 'success');
             } catch (e) {
                 console.error(e);
                 showToast(e.message || "Failed to enhance prompt", "error");
+                appendLog('log-terminal', `Enhancement Error: ${e.message}`, 'error');
             } finally {
                 // Reset state
                 btnIcon.className = originalIconClass;
@@ -394,10 +583,21 @@
             }
 
             toggleLoading(true);
+            
+            // Open terminal
+            toggleTerminal(true);
+            setPanelTab('terminal');
+            clearCurrentLog(); // Start fresh for new build
+            document.getElementById('log-console').innerHTML = ''; // Clear old console logs
+            
+            appendLog('log-terminal', `Starting build process using ${model}...`);
+            appendLog('log-terminal', 'Connecting to OpenRouter API...');
 
             try {
                 // Direct call to OpenRouter with selected model, using default system prompt
                 let htmlContent = await callOpenRouter(apiKey, prompt, model);
+                
+                appendLog('log-terminal', 'Code received from API. Processing...');
 
                 // Clean the output (remove markdown fences if AI ignores prompt)
                 const cleanHtml = htmlContent.replace(/^```html/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
@@ -405,10 +605,12 @@
                 updatePreview(cleanHtml);
                 setView('preview'); // Switch to preview tab on success
                 showToast("Website generated successfully!");
+                appendLog('log-terminal', 'Build successful. Preview rendered.', 'success');
 
             } catch (error) {
                 console.error(error);
                 showToast(error.message || "Generation failed", "error");
+                appendLog('log-terminal', `Build Failed: ${error.message}`, 'error');
             } finally {
                 toggleLoading(false);
             }
@@ -417,7 +619,7 @@
         // Generic function for calling OpenRouter
         async function callOpenRouter(apiKey, prompt, model, systemInstruction = null) {
             // Fix: Use plain strings for URL and Referer to avoid parsing errors
-            const url = "https://openrouter.ai/api/v1/chat/completions";
+            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
             const effectiveSystemPrompt = systemInstruction || SYSTEM_PROMPT;
             
             try {
@@ -425,7 +627,7 @@
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        "HTTP-Referer": "https://github.com/AI-Website-Builder", 
+                        "HTTP-Referer": "[https://github.com/AI-Website-Builder](https://github.com/AI-Website-Builder)", 
                         "X-Title": "AI Website Builder",
                         "Content-Type": "application/json"
                     },
@@ -483,9 +685,8 @@
             debounceTimer = setTimeout(() => {
                 const newCode = e.target.value;
                 generatedCode = newCode;
-                const frame = document.getElementById('preview-frame');
-                const blob = new Blob([newCode], { type: 'text/html' });
-                frame.src = URL.createObjectURL(blob);
+                // Don't inject script here again for simplicity, or do full updatePreview
+                updatePreview(newCode); 
             }, 1000); // 1s delay before re-rendering to prevent stutter
         });
 
