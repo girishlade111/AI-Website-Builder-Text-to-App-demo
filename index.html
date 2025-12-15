@@ -313,23 +313,26 @@
         }
 
         async function callOpenRouter(apiKey, prompt) {
-            const url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+            const url = '[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)';
             
+            const payload = {
+                model: "openai/gpt-4o-mini", // Defaulting to a reliable model on OpenRouter
+                messages: [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.7
+            };
+
             const response = await fetch(url, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "HTTP-Referer": window.location.href, // Optional. Site URL for rankings on openrouter.ai.
-                    "X-Title": "AI Website Builder", // Optional. Site title for rankings on openrouter.ai.
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': window.location.href, // Required by OpenRouter
+                    'X-Title': 'AI Website Builder' // Required by OpenRouter
                 },
-                body: JSON.stringify({
-                    "model": "qwen/qwen3-coder:free",
-                    "messages": [
-                        { "role": "system", "content": SYSTEM_PROMPT },
-                        { "role": "user", "content": prompt }
-                    ]
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
